@@ -49,26 +49,24 @@ string mask(const string data) {
         cerr << "IN: " << data << "\n----------------------------------------------\n";
     }
 
-    string result;
+    string result(data);
 
     vector<int> digits;
 
-    string::const_iterator itr = data.begin();
+    string::iterator itr = result.begin();
 
-    for(itr; itr < data.end(); ++itr) {
+    for(itr; itr < result.end(); ++itr) {
         const char ch = *itr;
         
         //cerr << "Processing: " << ch;
         if (!isdigit(ch) && ch != '-' && ch != ' ') {
             //cerr <<  ". Skipping" << endl;
             digits.clear();
-            result.append(1, ch);
             continue;
         }
 
         if (ch == '-' || ch == ' ') {
             //cerr << ". Skip but continue on " << ch << endl;
-            result.append(1, ch);
             continue;
         }
 
@@ -83,7 +81,12 @@ string mask(const string data) {
 
         if (valid) {
             cerr << "masking: "; dump(digits); cerr << endl;
-            result = result.append(digits.size(), 'X');
+            string::iterator mask_end = itr + 1;
+            string::iterator mask_begin = itr;
+            advance(mask_begin, digits.size() * -1);
+            cerr << *mask_begin << endl;
+            cerr << *mask_end << endl;
+            fill(mask_begin, mask_end, 'X');
         }
     }
 
@@ -119,7 +122,6 @@ bool is_valid(const vector<int> data) {
             int num = atoi(&ch);
             luhn_product.push_back(num);
         }
-
     }
     
     const int luhn_sum = accumulate(luhn_product.begin(), luhn_product.end(), 0);
