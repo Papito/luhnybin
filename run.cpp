@@ -24,7 +24,10 @@ int main(int argc, char* argv[]) {
 
     while(cin) {
         getline(cin, data);
-        cout << mask(data) << endl;
+        const string masked = mask(data);
+        cerr << masked;
+        cout << masked << endl;
+        cerr << "\n----------------------------------------------\n";
     };
 
     return 0;
@@ -42,22 +45,30 @@ void dump(vector<int> data) {
 //----------------------------------------------------------------------
 
 string mask(const string data) {
-    cerr << "IN: " << data << "\n----------------------------------------------\n";
+    if (data.size()) {
+        cerr << "IN: " << data << "\n----------------------------------------------\n";
+    }
+
+    string result;
 
     vector<int> digits;
 
-    for(int n=0; n < data.length(); ++n) {
-        char ch = data[n]; 
+    string::const_iterator itr = data.begin();
+
+    for(itr; itr < data.end(); ++itr) {
+        const char ch = *itr;
         
         //cerr << "Processing: " << ch;
         if (!isdigit(ch) && ch != '-' && ch != ' ') {
             //cerr <<  ". Skipping" << endl;
             digits.clear();
+            result.append(1, ch);
             continue;
         }
 
         if (ch == '-' || ch == ' ') {
             //cerr << ". Skip but continue on " << ch << endl;
+            result.append(1, ch);
             continue;
         }
 
@@ -68,32 +79,26 @@ string mask(const string data) {
         //dump(digits);
         //cerr <<  " - " << digits.size() <<  endl;
 
-        if (digits.size() >= MIN_LEN && digits.size() <= MAX_LEN) {
-            const bool valid = is_valid(digits);
+        const bool valid = is_valid(digits);
 
-            cerr << endl;
-            if (valid) {
-                cerr << "ACCEPTED";
-            } 
-            else {
-                cerr << "REJECTED";
-            }
-            cerr << endl;
+        if (valid) {
+            cerr << "masking: "; dump(digits); cerr << endl;
+            result = result.append(digits.size(), 'X');
         }
     }
 
-    return data;
+    return result;
 }
 //----------------------------------------------------------------------
 
-bool is_valid(vector<int> data) {
-    cerr << "processing: ";
-    dump(data);
-    cerr << endl;
+bool is_valid(const vector<int> data) {
+    if (data.size() < MIN_LEN || data.size() > MAX_LEN) {
+        return false;
+    }
 
     vector<int> luhn_product;
 
-    vector<int>::reverse_iterator itr = data.rbegin();
+    vector<int>::const_reverse_iterator itr = data.rbegin();
 
     std::stringstream ss;
     for (itr; itr < data.rend(); ++itr) {
