@@ -25,7 +25,6 @@ int main(int argc, char* argv[]) {
     while(cin) {
         getline(cin, data);
         const string masked = mask(data);
-        cerr << masked;
         cout << masked << endl;
         cerr << "\n----------------------------------------------\n";
     };
@@ -70,12 +69,18 @@ string mask(const string data) {
             continue;
         }
 
-        //cerr << ". Adding: " << ch << endl;
+        cerr << ". Adding: " << ch << endl;
         int digit = atoi(&ch);
         digits.push_back(digit);
+
+        if (digits.size() > MAX_LEN) {
+            digits.erase(digits.begin(), digits.begin() + 1);
+            digits.resize(MIN_LEN);
+            advance(itr, MIN_LEN - MAX_LEN);
+        }
         
-        //dump(digits);
-        //cerr <<  " - " << digits.size() <<  endl;
+        dump(digits);
+        cerr <<  " - " << digits.size() <<  endl;
 
         const bool valid = is_valid(digits);
 
@@ -83,9 +88,7 @@ string mask(const string data) {
             cerr << "masking: "; dump(digits); cerr << endl;
             string::iterator mask_end = itr + 1;
             string::iterator mask_begin = itr;
-            advance(mask_begin, digits.size() * -1);
-            cerr << *mask_begin << endl;
-            cerr << *mask_end << endl;
+            advance(mask_begin, digits.size() * -1 + 1);
             fill(mask_begin, mask_end, 'X');
         }
     }
@@ -96,6 +99,7 @@ string mask(const string data) {
 
 bool is_valid(const vector<int> data) {
     if (data.size() < MIN_LEN || data.size() > MAX_LEN) {
+        //cerr << "at: "; dump(data); cerr << endl;
         return false;
     }
 
