@@ -59,7 +59,7 @@ void mask(const string & data, string & result, string::const_iterator itr1, str
     int digit_count = count_if(itr1, itr2, ::isdigit);
     int invalid_char_count = count_if(itr1, itr2, is_invalid_char);
 
-    while (digit_count <= MAX_LEN && invalid_char_count == 0 && itr2 <= data.end()) {
+    while (invalid_char_count == 0 && digit_count <= MAX_LEN && itr2 <= data.end()) {
         const bool isvalid = is_valid(data, itr1, itr2);
 
         if (isvalid) {
