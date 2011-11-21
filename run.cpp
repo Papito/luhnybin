@@ -18,62 +18,50 @@ const int MIN_LEN = 14;
 const int MAX_LEN = 16;
 
 string mask(const string data);
-bool is_valid(vector<char> data);
+bool is_valid(const string data);
+int get_digit_count(const string cc_no);
+//----------------------------------------------------------------------
 
 int main(int argc, char* argv[]) {
     string data;
 
     while(cin) {
         getline(cin, data);
-        const string masked = mask(data);
-        cout << masked << endl;
+        cout << mask(data) << endl;
     };
 
     return 0;
 }
 //----------------------------------------------------------------------
 
-void print (char ch) {
-    cerr << ch;
-}
-//----------------------------------------------------------------------
-
-void dump(vector<char> data) {
-    for_each(data.begin(), data.end(), print);
-}
-//----------------------------------------------------------------------
-
 string mask(const string data) {
     string result(data);
-    vector<char> digits;
-    string::const_iterator itr;
+    string cc_no("");
 
-    for(itr = data.begin(); itr < data.end(); ++itr) {
+    for(string::const_iterator itr = data.begin(); itr < data.end(); ++itr) {
         const char ch = *itr;
         
         if (!isdigit(ch) && ch != '-' && ch != ' ') {
-            digits.clear();
+            cc_no.clear();
             continue;
         }
 
-        digits.push_back(ch);
+        cc_no.push_back(ch);
 
-        int digit_count = count_if(digits.begin(), digits.end(), ::isdigit);
+        const int digit_count = get_digit_count(cc_no);
 
         if (digit_count >  MAX_LEN) {
-            digits.erase(digits.begin(), digits.begin() + 1);
-            digits.resize(MIN_LEN);
+            cc_no.erase(cc_no.begin(), cc_no.begin() + 1);
+            cc_no.resize(MIN_LEN);
             advance(itr, MIN_LEN - MAX_LEN);
-
-            digit_count =  count_if(digits.begin(), digits.end(), ::isdigit);
         }
 
-        const bool valid = is_valid(digits);
+        const bool valid = is_valid(cc_no);
 
         if (valid) {
             string::const_iterator origin_mask_end = itr + 1;
             string::const_iterator origin_mask_begin = itr;
-            advance(origin_mask_begin, digits.size() * - 1 + 2);
+            advance(origin_mask_begin, cc_no.size() * - 1 + 2);
 
             string::iterator mask_begin = result.begin();
             string::iterator mask_end = result.begin();
@@ -87,16 +75,15 @@ string mask(const string data) {
 }
 //----------------------------------------------------------------------
 
-bool is_valid(const vector<char> data) {
-    const int digit_count =  count_if(data.begin(), data.end(), ::isdigit);
+bool is_valid(const string cc_no) {
+    const int digit_count =  get_digit_count(cc_no);
     if (digit_count < MIN_LEN || digit_count > MAX_LEN) {
         return false;
     }
 
-    vector<char>::const_iterator data_itr;
     vector<int> digits;
 
-    for (data_itr = data.begin(); data_itr < data.end(); ++data_itr) {
+    for (string::const_iterator data_itr = cc_no.begin(); data_itr < cc_no.end(); ++data_itr) {
         char ch = *data_itr;
 
         if (isdigit(ch)) {
@@ -104,12 +91,10 @@ bool is_valid(const vector<char> data) {
         }
     }
 
-    vector<int>::reverse_iterator itr;
-
     vector<int> luhn_product;
-
     std::stringstream ss;
-    for (itr = digits.rbegin(); itr < digits.rend(); ++itr) {
+
+    for (vector<int>::reverse_iterator itr = digits.rbegin(); itr < digits.rend(); ++itr) {
         int digit = *itr;
 
         const int dist = distance(digits.rbegin(), itr);
@@ -133,3 +118,9 @@ bool is_valid(const vector<char> data) {
 
     return luhn_sum % 10 == 0;
 }
+//----------------------------------------------------------------------
+
+int get_digit_count(const string cc_no) {
+    return std::count_if(cc_no.begin(), cc_no.end(), ::isdigit);
+}
+
