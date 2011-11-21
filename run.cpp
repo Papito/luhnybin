@@ -35,85 +35,67 @@ const int MIN_LEN = 14;
 const int MAX_LEN = 16;
 
 // forward declarations
-string mask(const string data);
-bool is_valid(const string data);
-int get_digit_count(const string cc_no);
-//----------------------------------------------------------------------
+string process(const string & data);
+bool is_valid(const string & data, string::const_iterator itr1, string::const_iterator itr2);
+int get_digit_count(const string & cc_no);
 
 int main(int argc, char* argv[]) {
     // read standard input, line by line
     string data;
     while(cin) {
         getline(cin, data);
-        cout << mask(data) << endl;
+        cout << process(data) << endl;
     };
     return 0;
 }
 //----------------------------------------------------------------------
 
-string mask(const string data) {
+bool is_invalid_char(const char ch) {
+    return !isdigit(ch) && ch != '-' && ch != ' ';
+}
+//----------------------------------------------------------------------
+
+void mask(const string & data, string & result, string::const_iterator itr1, string::const_iterator itr2) {
+    int digit_count = count_if(itr1, itr2, ::isdigit);
+    int invalid_char_count = count_if(itr1, itr2, is_invalid_char);
+
+    while (digit_count <= MAX_LEN && invalid_char_count == 0 && itr2 <= data.end()) {
+        const bool isvalid = is_valid(data, itr1, itr2);
+
+        if (isvalid) {
+            string::iterator mask_begin = result.begin() + distance(data.begin(), itr1);
+            string::iterator mask_end   = result.begin() + distance(data.begin(), itr2);
+            // mask
+            replace_if(mask_begin, mask_end, ::isdigit, 'X');
+        }
+
+        ++itr2;
+        digit_count = count_if(itr1, itr2, ::isdigit);
+    }
+}
+//----------------------------------------------------------------------
+
+string process(const string & data) {
     // copy input into mutable result string
     string result(data);
-
     // credit card number
     string cc_no("");
 
-    // build cc no, character by character
-    for(string::const_iterator itr = data.begin(); itr < data.end(); ++itr) {
-        const char ch = *itr;
-        
-        // skip non-digits and non-delimiters
-        if (!isdigit(ch) && ch != '-' && ch != ' ') {
-            // if we hit a foreign character, void whatever cc # we have
-            cc_no.clear();
-            continue;
-        }
+    string::const_iterator itr1 = data.begin();
+    string::const_iterator itr2 = itr1 + MIN_LEN;
 
-        // add this character to cc #
-        cc_no.push_back(ch);
-
-        const int digit_count = get_digit_count(cc_no);
-
-        // if we go over allowed max digits
-        if (digit_count >  MAX_LEN) {
-            // erase the first one
-            cc_no.erase(cc_no.begin(), cc_no.begin() + 1);
-            // erase the last x digits to get shortest possible valid cc #
-            cc_no.resize(MIN_LEN);
-
-            /*
-                Rewind main string iterator by same amount.
-                In this fashion we move the pointer forward by one,
-                and check again for next possible valid cc.
-            */
-            advance(itr, (MAX_LEN - MIN_LEN) * -1); 
-        }
-
-        const bool valid = is_valid(cc_no);
-
-        if (valid) {
-            // get constant iterator range to be masked, from immutable input
-            string::const_iterator origin_mask_end = itr + 1;
-            string::const_iterator origin_mask_begin = itr;
-            advance(origin_mask_begin, cc_no.size() * - 1 + 2);
-
-            // translate to same range on the mutable copy
-            string::iterator mask_begin = result.begin();
-            string::iterator mask_end = result.begin();
-            advance(mask_begin, origin_mask_begin - data.begin() - 1);
-            advance(mask_end, origin_mask_end - data.begin());
-
-            // mask digits
-            replace_if(mask_begin, mask_end, ::isdigit, 'X');
-        }
+    while (itr2 <= data.end()) {
+        mask(data, result, itr1, itr2);
+        ++itr1;
+        ++itr2;
     }
 
     return result;
 }
 //----------------------------------------------------------------------
 
-bool is_valid(const string cc_no) {
-    const int digit_count =  get_digit_count(cc_no);
+bool is_valid(const string & data, string::const_iterator itr1, string::const_iterator itr2) {
+    const int digit_count = count_if(itr1, itr2, ::isdigit);
     if (digit_count < MIN_LEN || digit_count > MAX_LEN) {
         return false;
     }
@@ -121,9 +103,8 @@ bool is_valid(const string cc_no) {
     vector<int> digits;
     
     // get digits-only vector from raw character input
-    for (string::const_iterator data_itr = cc_no.begin(); data_itr < cc_no.end(); ++data_itr) {
-        char ch = *data_itr;
-
+    for (itr1; itr1 < itr2; ++itr1) {
+        char ch = *itr1;
         if (isdigit(ch)) {
             digits.push_back(atoi(&ch));
         }
@@ -138,7 +119,6 @@ bool is_valid(const string cc_no) {
     // go in reverse
     for (vector<int>::reverse_iterator itr = digits.rbegin(); itr < digits.rend(); ++itr) {
         int digit = *itr;
-
         // we double every other digit starting from back of this container
         const int dist = distance(digits.rbegin(), itr);
 
@@ -163,12 +143,5 @@ bool is_valid(const string cc_no) {
     
     // w00t
     const int luhn_sum = accumulate(luhn_product.begin(), luhn_product.end(), 0);
-
     return luhn_sum % 10 == 0;
 }
-//----------------------------------------------------------------------
-
-int get_digit_count(const string cc_no) {
-    return std::count_if(cc_no.begin(), cc_no.end(), ::isdigit);
-}
-
