@@ -17,7 +17,7 @@ const int MIN_LEN = 14;
 const int MAX_LEN = 16;
 
 string mask(const string data);
-bool is_valid(vector<int> data);
+bool is_valid(vector<char> data);
 
 int main(int argc, char* argv[]) {
     string data;
@@ -33,12 +33,12 @@ int main(int argc, char* argv[]) {
 }
 //----------------------------------------------------------------------
 
-void print (int ch) {
+void print (char ch) {
     cerr << ch;
 }
 //----------------------------------------------------------------------
 
-void dump(vector<int> data) {
+void dump(vector<char> data) {
     for_each(data.begin(), data.end(), print);
 }
 //----------------------------------------------------------------------
@@ -50,7 +50,7 @@ string mask(const string data) {
 
     string result(data);
 
-    vector<int> digits;
+    vector<char> digits;
 
     string::iterator itr = result.begin();
 
@@ -64,23 +64,18 @@ string mask(const string data) {
             continue;
         }
 
-        if (ch == '-' || ch == ' ') {
-            //cerr << ". Skip but continue on " << ch << endl;
-            continue;
-        }
-
         cerr << ". Adding: " << ch << endl;
-        int digit = atoi(&ch);
-        digits.push_back(digit);
+        digits.push_back(ch);
 
-        if (digits.size() > MAX_LEN) {
+        const int digit_count =  count_if(digits.begin(), digits.end(), ::isdigit);
+        if (digit_count >  MAX_LEN) {
             digits.erase(digits.begin(), digits.begin() + 1);
             digits.resize(MIN_LEN);
             advance(itr, MIN_LEN - MAX_LEN);
         }
         
         dump(digits);
-        cerr <<  " - " << digits.size() <<  endl;
+        cerr <<  " - " << digit_count <<  endl;
 
         const bool valid = is_valid(digits);
 
@@ -89,7 +84,7 @@ string mask(const string data) {
             string::iterator mask_end = itr + 1;
             string::iterator mask_begin = itr;
             advance(mask_begin, digits.size() * -1 + 1);
-            fill(mask_begin, mask_end, 'X');
+            replace_if(mask_begin, mask_end, ::isdigit, 'X');
         }
     }
 
@@ -97,21 +92,33 @@ string mask(const string data) {
 }
 //----------------------------------------------------------------------
 
-bool is_valid(const vector<int> data) {
-    if (data.size() < MIN_LEN || data.size() > MAX_LEN) {
+bool is_valid(const vector<char> data) {
+    const int digit_count =  count_if(data.begin(), data.end(), ::isdigit);
+    if (digit_count < MIN_LEN || digit_count > MAX_LEN) {
         //cerr << "at: "; dump(data); cerr << endl;
         return false;
     }
 
+    vector<char>::const_iterator data_itr;
+
+    vector<int> digits;
+    for (data_itr = data.begin(); data_itr < data.end(); ++data_itr) {
+        char ch = *data_itr;
+
+        if (isdigit(ch)) {
+            digits.push_back(atoi(&ch));
+        }
+    }
+
+    vector<int>::reverse_iterator itr;
+
     vector<int> luhn_product;
 
-    vector<int>::const_reverse_iterator itr = data.rbegin();
-
     std::stringstream ss;
-    for (itr; itr < data.rend(); ++itr) {
+    for (itr = digits.rbegin(); itr < digits.rend(); ++itr) {
         int digit = *itr;
 
-        const int dist = distance(data.rbegin(), itr);
+        const int dist = distance(digits.rbegin(), itr);
 
         if (dist % 2 != 0) {
             digit = digit * 2;
