@@ -65,22 +65,18 @@ void mask(const string & data, string & result, string::const_iterator itr1, str
         if (isvalid) {
             string::iterator mask_begin = result.begin() + distance(data.begin(), itr1);
             string::iterator mask_end   = result.begin() + distance(data.begin(), itr2);
-            // mask
             replace_if(mask_begin, mask_end, ::isdigit, 'X');
         }
 
         ++itr2;
         digit_count = count_if(itr1, itr2, ::isdigit);
+        invalid_char_count = count_if(itr1, itr2, is_invalid_char);
     }
 }
 //----------------------------------------------------------------------
 
 string process(const string & data) {
-    // copy input into mutable result string
     string result(data);
-    // credit card number
-    string cc_no("");
-
     string::const_iterator itr1 = data.begin();
     string::const_iterator itr2 = itr1 + MIN_LEN;
 
@@ -110,7 +106,6 @@ bool is_valid(const string & data, string::const_iterator itr1, string::const_it
         }
     }
 
-    // bucket of integers to be summed up
     vector<int> luhn_product;
 
     // for translating digits to strings
@@ -119,7 +114,6 @@ bool is_valid(const string & data, string::const_iterator itr1, string::const_it
     // go in reverse
     for (vector<int>::reverse_iterator itr = digits.rbegin(); itr < digits.rend(); ++itr) {
         int digit = *itr;
-        // we double every other digit starting from back of this container
         const int dist = distance(digits.rbegin(), itr);
 
         if (dist % 2 != 0) { // one of every other digits
@@ -134,9 +128,7 @@ bool is_valid(const string & data, string::const_iterator itr1, string::const_it
         // add the separate digits, in case there is more than one, to luhn container
         for (int n = 0; n < as_string.size(); ++n) {
             char ch = as_string[n];
-            // to integer
             int num = atoi(&ch);
-            // add to luhn container
             luhn_product.push_back(num);
         }
     }
