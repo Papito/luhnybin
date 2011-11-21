@@ -8,6 +8,7 @@
 #include <numeric>
 #include <ctype.h>
 #include <sstream> 
+#include <functional>
 
 #endif
 
@@ -26,7 +27,6 @@ int main(int argc, char* argv[]) {
         getline(cin, data);
         const string masked = mask(data);
         cout << masked << endl;
-        cerr << "\n----------------------------------------------\n";
     };
 
     return 0;
@@ -44,46 +44,41 @@ void dump(vector<char> data) {
 //----------------------------------------------------------------------
 
 string mask(const string data) {
-    if (data.size()) {
-        cerr << "IN: " << data << "\n----------------------------------------------\n";
-    }
-
     string result(data);
-
     vector<char> digits;
+    string::const_iterator itr;
 
-    string::iterator itr = result.begin();
-
-    for(itr; itr < result.end(); ++itr) {
+    for(itr = data.begin(); itr < data.end(); ++itr) {
         const char ch = *itr;
         
-        //cerr << "Processing: " << ch;
         if (!isdigit(ch) && ch != '-' && ch != ' ') {
-            //cerr <<  ". Skipping" << endl;
             digits.clear();
             continue;
         }
 
-        cerr << ". Adding: " << ch << endl;
         digits.push_back(ch);
 
-        const int digit_count =  count_if(digits.begin(), digits.end(), ::isdigit);
+        int digit_count = count_if(digits.begin(), digits.end(), ::isdigit);
+
         if (digit_count >  MAX_LEN) {
             digits.erase(digits.begin(), digits.begin() + 1);
             digits.resize(MIN_LEN);
             advance(itr, MIN_LEN - MAX_LEN);
+
+            digit_count =  count_if(digits.begin(), digits.end(), ::isdigit);
         }
-        
-        dump(digits);
-        cerr <<  " - " << digit_count <<  endl;
 
         const bool valid = is_valid(digits);
 
         if (valid) {
-            cerr << "masking: "; dump(digits); cerr << endl;
-            string::iterator mask_end = itr + 1;
-            string::iterator mask_begin = itr;
-            advance(mask_begin, digits.size() * -1 + 1);
+            string::const_iterator origin_mask_end = itr + 1;
+            string::const_iterator origin_mask_begin = itr;
+            advance(origin_mask_begin, digits.size() * - 1 + 2);
+
+            string::iterator mask_begin = result.begin();
+            string::iterator mask_end = result.begin();
+            advance(mask_begin, origin_mask_begin - data.begin() - 1);
+            advance(mask_end, origin_mask_end - data.begin());
             replace_if(mask_begin, mask_end, ::isdigit, 'X');
         }
     }
@@ -95,13 +90,12 @@ string mask(const string data) {
 bool is_valid(const vector<char> data) {
     const int digit_count =  count_if(data.begin(), data.end(), ::isdigit);
     if (digit_count < MIN_LEN || digit_count > MAX_LEN) {
-        //cerr << "at: "; dump(data); cerr << endl;
         return false;
     }
 
     vector<char>::const_iterator data_itr;
-
     vector<int> digits;
+
     for (data_itr = data.begin(); data_itr < data.end(); ++data_itr) {
         char ch = *data_itr;
 
